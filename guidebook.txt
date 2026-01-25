@@ -1,0 +1,21 @@
+/**
+
+🎯 Mục tiêu Phase 0
+
+  Project skeleton chuẩn production
+
+  API-only (không Blade)
+
+  Exception & response thống nhất
+
+  Sẵn sàng cho Auth / Wallet / Subscription
+
+🧭 LỘ TRÌNH PHASE 1 (CHIA NHỎ)
+1. User model chuẩn API
+2. Register
+3. Login (device-based token)
+4. Logout / revoke token
+5. Protect routes
+6. Email verification
+7. Password reset
+8. Rate limit login
