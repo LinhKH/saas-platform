@@ -27,7 +27,9 @@ class AuthService
 
   public function register(array $data): User
   {
-    return $this->userRepo->create($data);
+    $user = $this->userRepo->create($data);
+    event(new \App\Events\UserRegistered($user));
+    return $user;
   }
 
   public function login(
@@ -47,5 +49,20 @@ class AuthService
   public function logout(User $user): void
   {
     $user->currentAccessToken()->delete();
+  }
+
+  public function verifyEmail(int $userId, string $hash): void
+  {
+    $user = $this->userRepo->findById($userId);
+
+    if (!hash_equals(sha1($user->email), $hash)) {
+      throw new DomainException('Invalid verification link', 403);
+    }
+
+    if ($user->hasVerifiedEmail()) {
+      return;
+    }
+
+    $user->markEmailAsVerified();
   }
 }
