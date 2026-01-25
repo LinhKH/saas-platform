@@ -37,7 +37,8 @@ class AuthController extends BaseApiController
     $token = $this->authService->login(
       $data['email'],
       $data['password'],
-      $data['device_name']
+      $data['device_name'],
+      $request->ip()
     );
 
     return $this->success(['token' => $token], 'Logged in');
