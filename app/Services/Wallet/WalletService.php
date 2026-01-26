@@ -5,6 +5,7 @@ namespace App\Services\Wallet;
 use App\Exceptions\DomainException;
 use App\Models\WalletTransaction;
 use App\Repositories\Contracts\WalletRepositoryInterface;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -28,68 +29,87 @@ class WalletService
     string $reference,
     string $description = null
   ): void {
-    DB::transaction(function () use ($userId, $amount, $reference, $description) {
+    $this->runWithRetry(function () use ($userId, $amount, $reference, $description) {
+      DB::transaction(function () use ($userId, $amount, $reference, $description) {
 
-      $wallet = $this->walletRepo->findByUserIdForUpdate($userId);
+        $wallet = $this->walletRepo->findByUserIdForUpdate($userId);
 
-      // ✅ Idempotency check
-      $exists = WalletTransaction::where('wallet_id', $wallet->id)
-        ->where('reference', $reference)
-        ->exists();
+        // ✅ Idempotency check
+        $exists = WalletTransaction::where('wallet_id', $wallet->id)
+          ->where('reference', $reference)
+          ->exists();
 
-      if ($exists) {
-        return; // already processed
-      }
+        if ($exists) {
+          return; // already processed
+        }
 
-      $newBalance = $wallet->balance + $amount;
+        $newBalance = $wallet->balance + $amount;
 
-      WalletTransaction::create([
-        'wallet_id' => $wallet->id,
-        'type' => 'credit',
-        'amount' => $amount,
-        'balance_after' => $newBalance,
-        'reference' => $reference,
-        'description' => $description,
-      ]);
+        WalletTransaction::create([
+          'wallet_id' => $wallet->id,
+          'type' => 'credit',
+          'amount' => $amount,
+          'balance_after' => $newBalance,
+          'reference' => $reference,
+          'description' => $description,
+        ]);
 
-      $this->walletRepo->updateBalance($wallet, $newBalance);
+        $this->walletRepo->updateBalance($wallet, $newBalance);
+      });
     });
   }
 
   public function debit(
     int $userId,
     float $amount,
-    string $reference = null,
+    string $reference,
     string $description = null
   ): void {
-    DB::transaction(function () use ($userId, $amount, $reference, $description) {
+    $this->runWithRetry(function () use ($userId, $amount, $reference, $description) {
+      DB::transaction(function () use ($userId, $amount, $reference, $description) {
 
-      $wallet = $this->walletRepo->findByUserIdForUpdate($userId);
+        $wallet = $this->walletRepo->findByUserIdForUpdate($userId);
 
-      $exists = WalletTransaction::where('wallet_id', $wallet->id)
-        ->where('reference', $reference)
-        ->exists();
+        $exists = WalletTransaction::where('wallet_id', $wallet->id)
+          ->where('reference', $reference)
+          ->exists();
 
-      if ($exists) {
-        return;
-      }
-      
-      if ($wallet->balance < $amount) {
-        throw new DomainException('Insufficient balance', 422);
-      }
+        if ($exists) {
+          return;
+        }
 
-      $newBalance = $wallet->balance - $amount;
+        if ($wallet->balance < $amount) {
+          throw new DomainException('Insufficient balance', 422);
+        }
 
-      WalletTransaction::create([
-        'wallet_id' => $wallet->id,
-        'type' => 'debit',
-        'amount' => $amount,
-        'balance_after' => $newBalance,
-        'reference' => $reference,
-        'description' => $description,
-      ]);
+        $newBalance = $wallet->balance - $amount;
 
-      $this->walletRepo->updateBalance($wallet, $newBalance);
+        WalletTransaction::create([
+          'wallet_id' => $wallet->id,
+          'type' => 'debit',
+          'amount' => $amount,
+          'balance_after' => $newBalance,
+          'reference' => $reference,
+          'description' => $description,
+        ]);
+
+        $this->walletRepo->updateBalance($wallet, $newBalance);
+      });
     });
+  }
+
+  protected function runWithRetry(callable $callback, int $times = 3): void
+  {
+    retry($times, function () use ($callback) {
+      try {
+        $callback();
+      } catch (QueryException $e) {
+        // MySQL deadlock error code
+        if ($e->getCode() === '40001') {
+          throw $e;
+        }
+        throw $e;
+      }
+    }, 100); // 100ms delay
   }
 }
