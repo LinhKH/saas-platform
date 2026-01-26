@@ -32,6 +32,7 @@ class AuthService
   public function register(array $data): User
   {
     $user = $this->userRepo->create($data);
+    \Log::info('User registered', ['user_id' => $user->id]);
     event(new \App\Events\UserRegistered($user));
     return $user;
   }

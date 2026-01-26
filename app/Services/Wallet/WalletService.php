@@ -25,12 +25,21 @@ class WalletService
   public function credit(
     int $userId,
     float $amount,
-    string $reference = null,
+    string $reference,
     string $description = null
   ): void {
     DB::transaction(function () use ($userId, $amount, $reference, $description) {
 
       $wallet = $this->walletRepo->findByUserIdForUpdate($userId);
+
+      // ✅ Idempotency check
+      $exists = WalletTransaction::where('wallet_id', $wallet->id)
+        ->where('reference', $reference)
+        ->exists();
+
+      if ($exists) {
+        return; // already processed
+      }
 
       $newBalance = $wallet->balance + $amount;
 
@@ -57,6 +66,14 @@ class WalletService
 
       $wallet = $this->walletRepo->findByUserIdForUpdate($userId);
 
+      $exists = WalletTransaction::where('wallet_id', $wallet->id)
+        ->where('reference', $reference)
+        ->exists();
+
+      if ($exists) {
+        return;
+      }
+      
       if ($wallet->balance < $amount) {
         throw new DomainException('Insufficient balance', 422);
       }
