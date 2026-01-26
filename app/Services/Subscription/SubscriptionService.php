@@ -4,6 +4,7 @@ namespace App\Services\Subscription;
 
 use App\Exceptions\DomainException;
 use App\Models\Plan;
+use App\Models\Subscription;
 use App\Repositories\Contracts\SubscriptionRepositoryInterface;
 use App\Services\Wallet\WalletService;
 use Illuminate\Support\Facades\DB;
@@ -77,5 +78,56 @@ class SubscriptionService
       'year' => $start->copy()->addYear(),
       default => $start->copy()->addMonth(),
     };
+  }
+
+  public function renew(Subscription $subscription): void
+  {
+    // Only active subscriptions
+    if ($subscription->status !== 'active') {
+      return;
+    }
+
+    // Not yet due
+    if ($subscription->current_period_end->isFuture()) {
+      return;
+    }
+
+    $reference = 'renew_' . $subscription->id . '_' . $subscription->current_period_end->format('Ymd');
+
+    try {
+      $this->walletService->debit(
+        $subscription->user_id,
+        $this->getPlanPrice($subscription),
+        $reference,
+        'Subscription renewal'
+      );
+
+      // Success → extend period
+      $subscription->update([
+        'current_period_start' => now(),
+        'current_period_end' => $this->calculatePeriodEnd(
+          now(),
+          $this->getPlanInterval($subscription)
+        ),
+      ]);
+    } catch (DomainException $e) {
+      // Payment failed → past_due
+      $subscription->update([
+        'status' => 'past_due',
+      ]);
+    }
+  }
+
+  protected function getPlanPrice(Subscription $subscription): float
+  {
+    return match ($subscription->plan) {
+      'pro' => 300,
+      default => 100,
+    };
+  }
+
+  protected function getPlanInterval(Subscription $subscription): string
+  {
+    return 'month';
   }
 }
