@@ -236,3 +236,57 @@ Hiểu vì sao idempotency sống còn
 Hiểu vì sao Phase 2 rất quan trọng
 
 👉 Đây là tư duy Senior PHP / Laravel / Backend chung, không riêng framework.
+
+==========================================================================================
+🧱 PHASE 3 — SUBSCRIPTION (SaaS CORE)
+🎯 Mục tiêu Phase 3
+
+Subscription theo lifecycle thật
+
+Tính phí bằng Wallet
+
+An toàn với retry / webhook
+
+Tách Core vs Side-effect
+
+Chuẩn bị cho Payment gateway
+
+🧠 TƯ DUY CỐT LÕI (NHỚ KỸ)
+
+❌ Subscription ≠ cột is_active
+✅ Subscription = STATE MACHINE
+
+🔁 SUBSCRIPTION LIFECYCLE (CHUẨN SAAS)
+trialing
+   ↓
+active
+   ↓
+past_due
+   ↓
+cancelled
+   ↓
+expired
+
+
+trialing: dùng thử
+
+active: đang trả tiền
+
+past_due: gia hạn thất bại
+
+cancelled: user huỷ
+
+expired: hết hiệu lực
+
+👉 State transition phải hợp lệ, không nhảy bừa.
+
+🧭 ROADMAP PHASE 3
+3.1 Subscription model + migration
+3.2 Plan (pricing)
+3.3 Subscribe flow
+3.4 Renew (billing cycle)
+3.5 Cancel / Grace period
+3.6 Events + Notifications
+
+
+👉 Ta bắt đầu STEP 3.1.
