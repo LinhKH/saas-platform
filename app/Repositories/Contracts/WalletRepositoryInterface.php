@@ -9,4 +9,6 @@ interface WalletRepositoryInterface
   public function findByUserIdForUpdate(int $userId): Wallet;
 
   public function updateBalance(Wallet $wallet, float $balance): void;
+
+  public function createForUser(int $userId): Wallet;
 }

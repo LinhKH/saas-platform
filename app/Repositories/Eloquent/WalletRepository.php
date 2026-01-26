@@ -24,4 +24,12 @@ class WalletRepository implements WalletRepositoryInterface
   {
     $wallet->update(['balance' => $balance]);
   }
+
+  public function createForUser(int $userId): Wallet
+  {
+    return Wallet::create([
+      'user_id' => $userId,
+      'balance' => 0,
+    ]);
+  }
 }
