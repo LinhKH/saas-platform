@@ -19,3 +19,220 @@
 6. Email verification
 7. Password reset
 8. Rate limit login
+
+=============================================================================================================
+Mình sẽ giải thích KHÔNG CODE, KHÔNG LARAVEL, chỉ nói tư duy hệ thống + ví dụ đời thật.
+Đọc xong phần này, bạn sẽ tự thấy Phase 2 là bắt buộc.
+
+🧠 1. WALLET LÀ GÌ? (HIỂU ĐÚNG)
+❌ Hiểu sai phổ biến
+
+Wallet = 1 cột balance
+
+user_id | balance
+
+
+👉 Cách này chỉ dùng cho demo / toy app
+👉 KHÔNG dùng cho hệ thống có tiền thật
+
+✅ Hiểu đúng (Senior / Fintech)
+
+Wallet = TÀI KHOẢN TIỀN CỦA NGƯỜI DÙNG
+
+Giống như:
+
+Tài khoản ngân hàng
+
+Ví điện tử (Momo, ZaloPay)
+
+Ví trong SaaS (credits)
+
+👉 Wallet KHÔNG PHẢI tiền,
+👉 Wallet là NƠI QUẢN LÝ DÒNG TIỀN.
+
+🧠 2. BALANCE LÀ GÌ?
+🔹 Balance = “SỐ DƯ HIỆN TẠI”
+
+Ví dụ:
+
+Ví của bạn có 1.000.000₫
+
+👉 Balance trả lời câu hỏi:
+
+“Bây giờ tôi còn bao nhiêu tiền?”
+
+❗ VẤN ĐỀ CHẾT NGƯỜI
+
+Nếu chỉ có balance:
+
+Ai thay đổi?
+
+Thay đổi khi nào?
+
+Vì sao thay đổi?
+
+Có bị sửa nhầm không?
+
+👉 KHÔNG TRUY VẾT ĐƯỢC
+
+🧠 3. LEDGER LÀ GÌ? (PHẦN QUAN TRỌNG NHẤT)
+🔥 Ledger = SỔ CÁI KẾ TOÁN
+
+Ledger là lịch sử TẤT CẢ các giao dịch
+KHÔNG BAO GIỜ sửa / xoá
+
+🌍 Ví dụ đời thật
+
+Ngân hàng KHÔNG lưu mỗi số dư.
+
+Họ lưu:
+
++10.000.000 (lương)
+-2.000.000  (mua laptop)
+-200.000    (ăn uống)
+
+
+👉 Ledger = danh sách + / -
+
+🔁 Balance từ đâu ra?
+
+Balance = tổng (+) – tổng (–) của ledger
+
+👉 Balance có thể tính lại
+👉 Ledger KHÔNG THỂ tạo lại
+
+🧠 4. VÌ SAO PHẢI CÓ LEDGER?
+❓ Câu hỏi Senior luôn hỏi
+
+“Nếu user nói: Tôi bị trừ tiền sai, bạn làm gì?”
+
+❌ Không có ledger
+
+Không biết sai ở đâu
+
+Không audit được
+
+Không rollback được
+
+Mất uy tín / mất tiền
+
+✅ Có ledger
+
+Xem từng giao dịch
+
+Biết ai, khi nào, vì sao
+
+Có thể bù tiền (compensate)
+
+👉 Ledger = sự thật duy nhất
+
+🧠 5. BALANCE LÀ “CACHE”, LEDGER LÀ “SOURCE OF TRUTH”
+
+Đây là câu nói rất Senior
+
+Ledger = truth
+
+Balance = cache
+
+👉 Cache sai → rebuild
+👉 Truth sai → toang
+
+🧠 6. IDEMPOTENCY LÀ GÌ?
+🔥 Đây là khái niệm cực kỳ quan trọng
+
+Idempotency = gọi 1 lần hay 10 lần, kết quả CHỈ TÍNH 1
+
+🌍 Ví dụ đời thật
+
+Bạn chuyển khoản:
+
+Mạng lag
+
+App gửi lại request
+
+Server nhận 2 request giống nhau
+
+❌ Không idempotent:
+
+Tiền bị trừ 2 lần
+
+✅ Idempotent:
+
+Request thứ 2 → bỏ qua
+
+🧠 7. IDEMPOTENCY ÁP DỤNG Ở ĐÂU?
+Những nơi BẮT BUỘC
+
+Payment callback
+
+Wallet credit/debit
+
+Subscription renewal
+
+Order paid
+
+Ví dụ
+external_txn_id = "stripe_abc_123"
+
+
+Nếu đã xử lý stripe_abc_123 rồi →
+👉 KHÔNG xử lý lại
+
+🧠 8. DOUBLE-SPEND LÀ GÌ?
+❌ Vấn đề
+
+User có 100₫
+Gửi 2 request cùng lúc:
+
+Mua A: 80₫
+
+Mua B: 80₫
+
+👉 Nếu không khoá:
+
+Cả 2 cùng thấy balance = 100
+
+Trừ → -60
+
+✅ Cách Senior xử lý
+
+Lock wallet
+
+Check balance
+
+Trừ tiền
+
+Commit
+
+👉 DB lock + transaction
+
+🧠 9. TỔNG HỢP TƯ DUY (RẤT QUAN TRỌNG)
+Khái niệm	Trả lời câu hỏi
+Wallet	Tài khoản tiền
+Ledger	Lịch sử giao dịch
+Balance	Số dư hiện tại
+Idempotency	Tránh xử lý trùng
+Lock	Tránh double-spend
+🧠 10. TẠI SAO PHASE 2 KHÓ?
+
+Vì Phase 2 buộc bạn phải:
+
+Nghĩ như kế toán
+
+Nghĩ như hệ thống tài chính
+
+Nghĩ như backend production
+
+👉 Không còn là CRUD nữa.
+
+🎯 NẾU BẠN HIỂU ĐẾN ĐÂY, BẠN ĐÃ ĐẠT ĐƯỢC GÌ?
+
+Hiểu vì sao Wallet ≠ balance
+
+Hiểu vì sao ledger bất biến
+
+Hiểu vì sao idempotency sống còn
+
+Hiểu vì sao Phase 2 rất quan trọng
+
+👉 Đây là tư duy Senior PHP / Laravel / Backend chung, không riêng framework.
