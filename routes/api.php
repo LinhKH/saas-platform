@@ -1,8 +1,8 @@
 <?php
 
+use App\Http\Controllers\Api\SubscriptionController;
 use App\Http\Controllers\Api\VerifyEmailController;
 use Illuminate\Support\Facades\Route;
-
 
 Route::get('/ping', function () {
   return response()->json(['status' => 'ok']);
@@ -20,4 +20,8 @@ Route::middleware('auth:sanctum')->group(function () {
   Route::post('/auth/logout/current', [\App\Http\Controllers\Api\AuthController::class, 'logoutCurrent']);
   Route::post('/auth/logout/all', [\App\Http\Controllers\Api\AuthController::class, 'logoutAll']);
   Route::post('/auth/logout/device/{tokenId}', [\App\Http\Controllers\Api\AuthController::class, 'logoutDevice']);
+});
+
+Route::middleware('auth:sanctum')->group(function () {
+  Route::post('/subscribe', [SubscriptionController::class, 'subscribe']);
 });
