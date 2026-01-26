@@ -14,3 +14,10 @@ Route::middleware('auth:sanctum')->post('/logout', [\App\Http\Controllers\Api\Au
 
 Route::get('/email/verify/{id}/{hash}', [VerifyEmailController::class, 'verify'])
   ->name('verification.verify');
+
+Route::middleware('auth:sanctum')->group(function () {
+  Route::get('/auth/devices', [\App\Http\Controllers\Api\AuthController::class, 'devices']);
+  Route::post('/auth/logout/current', [\App\Http\Controllers\Api\AuthController::class, 'logoutCurrent']);
+  Route::post('/auth/logout/all', [\App\Http\Controllers\Api\AuthController::class, 'logoutAll']);
+  Route::post('/auth/logout/device/{tokenId}', [\App\Http\Controllers\Api\AuthController::class, 'logoutDevice']);
+});

@@ -5,9 +5,11 @@ namespace App\Services\Auth;
 use App\Exceptions\DomainException;
 use App\Models\User;
 use App\Repositories\Contracts\UserRepositoryInterface;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
+use Laravel\Sanctum\PersonalAccessToken;
 
 /**
 🧠 Nhận xét senior
@@ -88,5 +90,38 @@ class AuthService
     }
 
     $user->markEmailAsVerified();
+  }
+
+  /**
+   * List active tokens (devices)
+   */
+  public function listDevices(int $userId): Collection
+  {
+    return PersonalAccessToken::where('tokenable_id', $userId)
+      ->get(['id', 'name', 'last_used_at', 'created_at']);
+  }
+
+  /**
+   * Logout current device
+   */
+  public function logoutCurrentDevice($user): void
+  {
+    $user->currentAccessToken()->delete();
+  }
+
+  /**
+   * Logout all devices
+   */
+  public function logoutAllDevices($user): void
+  {
+    $user->tokens()->delete();
+  }
+
+  /**
+   * Logout specific device (by token id)
+   */
+  public function logoutDevice($user, int $tokenId): void
+  {
+    $user->tokens()->where('id', $tokenId)->delete();
   }
 }

@@ -50,4 +50,32 @@ class AuthController extends BaseApiController
 
     return $this->success(null, 'Logged out');
   }
+
+  public function devices(Request $request)
+  {
+    $devices = $this->authService->listDevices($request->user()->id);
+
+    return $this->success($devices);
+  }
+
+  public function logoutCurrent(Request $request)
+  {
+    $this->authService->logoutCurrentDevice($request->user());
+
+    return $this->success(null, 'Logged out current device');
+  }
+
+  public function logoutAll(Request $request)
+  {
+    $this->authService->logoutAllDevices($request->user());
+
+    return $this->success(null, 'Logged out all devices');
+  }
+
+  public function logoutDevice(Request $request, int $tokenId)
+  {
+    $this->authService->logoutDevice($request->user(), $tokenId);
+
+    return $this->success(null, 'Logged out device');
+  }
 }
