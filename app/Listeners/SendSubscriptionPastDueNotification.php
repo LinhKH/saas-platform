@@ -24,7 +24,7 @@ class SendSubscriptionPastDueNotification implements ShouldQueue
   {
     $event->subscription->user->notify(
       new SubscriptionStatusNotification(
-        'Payment failed',
+        'Payment failed, subscription past due',
         'We could not renew your subscription. Please update your payment.'
       )
     );

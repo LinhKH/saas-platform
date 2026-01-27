@@ -42,8 +42,7 @@ class Subscription extends Model
   // Trong trường hợp này, phương thức isActive() sử dụng isFuture() để kiểm tra xem thời gian kết thúc của kỳ hạn hiện tại (current_period_end) của subscription có còn trong tương lai hay không.
   public function isActive(): bool
   {
-    return $this->status === 'active'
-      && $this->current_period_end?->isFuture();
+    return $this->status === 'active' && $this->current_period_end?->isFuture();
   }
 
   public function isInGracePeriod(int $graceDays = 3): bool

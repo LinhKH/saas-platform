@@ -28,6 +28,13 @@ class PlanSeeder extends Seeder
         'interval' => 'month',
         'trial_days' => 14,
       ],
+      [
+        'code' => 'pro_yearly',
+        'name' => 'Pro Yearly',
+        'price' => 3000,
+        'interval' => 'year',
+        'trial_days' => 0,
+      ],
     ]);
   }
 }

@@ -40,6 +40,10 @@ class WalletService
           ->exists();
 
         if ($exists) {
+          \Log::info('Wallet debit skipped (idempotent)', [
+            'user_id' => $userId,
+            'reference' => $reference,
+          ]);
           return; // already processed
         }
 
@@ -65,6 +69,9 @@ class WalletService
     string $reference,
     string $description = null
   ): void {
+    if ($amount <= 0) {
+      throw new DomainException('Invalid debit amount');
+    }
     $this->runWithRetry(function () use ($userId, $amount, $reference, $description) {
       DB::transaction(function () use ($userId, $amount, $reference, $description) {
 
@@ -75,6 +82,10 @@ class WalletService
           ->exists();
 
         if ($exists) {
+          \Log::info('Wallet debit skipped (idempotent)', [
+            'user_id' => $userId,
+            'reference' => $reference,
+          ]);
           return;
         }
 

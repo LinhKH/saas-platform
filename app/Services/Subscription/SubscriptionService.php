@@ -200,6 +200,7 @@ User vẫn dùng tới hết kỳ
   {
     return match ($subscription->plan) {
       'pro' => 300,
+      'pro_yearly' => 3000,
       default => 100,
     };
   }
