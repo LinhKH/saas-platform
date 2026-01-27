@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\Api\PaymentController;
+use App\Http\Controllers\Api\PaymentWebhookController;
 use App\Http\Controllers\Api\SubscriptionController;
 use App\Http\Controllers\Api\VerifyEmailController;
 use Illuminate\Support\Facades\Route;
@@ -26,4 +28,8 @@ Route::middleware('auth:sanctum')->group(function () {
   Route::post('/subscribe', [SubscriptionController::class, 'subscribe']);
   Route::post('/subscription/cancel', [SubscriptionController::class, 'cancel']);
   Route::post('/subscription/resume', [SubscriptionController::class, 'resume']);
+
+  Route::post('/payments', [PaymentController::class, 'create']);
 });
+
+Route::post('/webhooks/{gateway}', [PaymentWebhookController::class, 'handle']);

@@ -2,9 +2,11 @@
 
 namespace App\Providers;
 
+use App\Repositories\Contracts\PaymentRepositoryInterface;
 use App\Repositories\Contracts\SubscriptionRepositoryInterface;
 use App\Repositories\Contracts\UserRepositoryInterface;
 use App\Repositories\Contracts\WalletRepositoryInterface;
+use App\Repositories\Eloquent\PaymentRepository;
 use App\Repositories\Eloquent\SubscriptionRepository;
 use App\Repositories\Eloquent\UserRepository;
 use App\Repositories\Eloquent\WalletRepository;
@@ -21,6 +23,7 @@ class RepositoryServiceProvider extends ServiceProvider
       UserRepositoryInterface::class => UserRepository::class,
       WalletRepositoryInterface::class => WalletRepository::class,
       SubscriptionRepositoryInterface::class => SubscriptionRepository::class,
+      PaymentRepositoryInterface::class => PaymentRepository::class,
     ];
 
     foreach ($bindings as $abstract => $concrete) {

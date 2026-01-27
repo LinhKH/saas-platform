@@ -355,3 +355,11 @@ expired: hết hiệu lực
       current_period_end được tính lại dựa trên thời điểm resume
       Log mail: "Subscription resumed"
  */
+
+ 🧭 ROADMAP PHASE 4
+4.1 Payment model + migration
+4.2 PaymentGateway interface
+4.3 MockGateway (fake Stripe)
+4.4 PaymentService (core)
+4.5 Webhook endpoint (idempotent)
+4.6 Link Payment → Wallet / Subscription
