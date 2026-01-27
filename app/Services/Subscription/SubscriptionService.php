@@ -35,7 +35,7 @@ class SubscriptionService
         ->first();
 
       if (!$plan) {
-        throw new DomainException('Invalid plan');
+        throw new DomainException('Invalid plan, cannot subscribe');
       }
 
       $existing = $this->subscriptionRepo->getActiveByUser($userId);
