@@ -45,4 +45,13 @@ class Subscription extends Model
     return $this->status === 'active'
       && $this->current_period_end?->isFuture();
   }
+
+  public function isInGracePeriod(int $graceDays = 3): bool
+  {
+    if ($this->status !== 'past_due') {
+      return false;
+    }
+
+    return $this->updated_at->addDays($graceDays)->isFuture();
+  }
 }

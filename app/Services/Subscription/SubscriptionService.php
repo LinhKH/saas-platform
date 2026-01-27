@@ -82,12 +82,32 @@ class SubscriptionService
 
   public function renew(Subscription $subscription): void
   {
+    // 1️⃣ Không xử lý nếu đã expired / cancelled
+    if (in_array($subscription->status, ['expired', 'cancelled'])) {
+      return;
+    }
+
+    // 2️⃣ Nếu past_due → kiểm tra grace period
+    if ($subscription->status === 'past_due') {
+
+      if (!$subscription->isInGracePeriod()) {
+        // ⬅⬅⬅ ĐOẠN BẠN HỎI ĐẶT Ở ĐÂY
+        $subscription->update([
+          'status' => 'expired',
+        ]);
+      }
+
+      return; // ⛔ KHÔNG tiếp tục renew
+    }
+
     // Only active subscriptions
+    // 3️⃣ Chỉ xử lý active subscription
     if ($subscription->status !== 'active') {
       return;
     }
 
     // Not yet due
+    // 4️⃣ Chưa tới hạn → không làm gì
     if ($subscription->current_period_end->isFuture()) {
       return;
     }
@@ -116,6 +136,50 @@ class SubscriptionService
         'status' => 'past_due',
       ]);
     }
+  }
+  /**
+   * Summary of cancelAtPeriodEnd
+   * @param Subscription $subscription
+   * @throws DomainException
+   * @return void
+   */
+  public function cancelAtPeriodEnd(Subscription $subscription): void
+  {
+    if (!in_array($subscription->status, ['active', 'trialing'])) {
+      throw new DomainException('Subscription cannot be cancelled');
+    }
+
+    $subscription->update([
+      'status' => 'cancelled',
+      'cancelled_at' => now(),
+    ]);
+  }
+  /*
+🧠 Senior note
+
+Không xoá subscription
+
+Không refund ngay
+
+User vẫn dùng tới hết kỳ
+  */
+
+  public function resume(Subscription $subscription): void
+  {
+    if ($subscription->status !== 'cancelled') {
+      throw new DomainException('Subscription cannot be resumed');
+    }
+
+    // Only resume if still within period
+    // isPast() là một phương thức của đối tượng Carbon, được sử dụng để kiểm tra xem một thời điểm cụ thể có nằm trong quá khứ so với thời điểm hiện tại hay không.
+    if ($subscription->current_period_end->isPast()) {
+      throw new DomainException('Subscription already expired');
+    }
+
+    $subscription->update([
+      'status' => 'active',
+      'cancelled_at' => null,
+    ]);
   }
 
   protected function getPlanPrice(Subscription $subscription): float

@@ -25,4 +25,22 @@ class SubscriptionController extends BaseApiController
 
     return $this->success($subscription, 'Subscribed');
   }
+
+  public function cancel(Request $request)
+  {
+    $subscription = $request->user()->subscription;
+
+    $this->subscriptionService->cancelAtPeriodEnd($subscription);
+
+    return $this->success(null, 'Subscription cancelled at period end');
+  }
+
+  public function resume(Request $request)
+  {
+    $subscription = $request->user()->subscription;
+
+    $this->subscriptionService->resume($subscription);
+
+    return $this->success(null, 'Subscription resumed');
+  }
 }

@@ -24,4 +24,6 @@ Route::middleware('auth:sanctum')->group(function () {
 
 Route::middleware('auth:sanctum')->group(function () {
   Route::post('/subscribe', [SubscriptionController::class, 'subscribe']);
+  Route::post('/subscription/cancel', [SubscriptionController::class, 'cancel']);
+  Route::post('/subscription/resume', [SubscriptionController::class, 'resume']);
 });

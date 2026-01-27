@@ -38,7 +38,8 @@ return new class extends Migration
 
 ❌ Không updated_at logic (ledger bất biến)
 
-balance_after giúp audit nhanh
+balance_after giúp audit nhanh và dễ dàng hơn
+(audit là quá trình kiểm tra, đánh giá và xác minh các giao dịch tài chính để đảm bảo tính chính xác và tuân thủ quy định.)
 
 reference dùng cho idempotency sau này
  */
