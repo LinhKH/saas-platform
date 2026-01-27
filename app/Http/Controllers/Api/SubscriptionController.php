@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use Illuminate\Http\Request;
 use App\Services\Subscription\SubscriptionService;
+use DomainException;
 
 class SubscriptionController extends BaseApiController
 {
@@ -29,6 +30,9 @@ class SubscriptionController extends BaseApiController
   public function cancel(Request $request)
   {
     $subscription = $request->user()->subscription;
+    if (!$subscription) {
+      throw new DomainException('No active subscription');
+    }
 
     $this->subscriptionService->cancelAtPeriodEnd($subscription);
 
@@ -38,6 +42,9 @@ class SubscriptionController extends BaseApiController
   public function resume(Request $request)
   {
     $subscription = $request->user()->subscription;
+    if (!$subscription) {
+      throw new DomainException('No active subscription');
+    }
 
     $this->subscriptionService->resume($subscription);
 
