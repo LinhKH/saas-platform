@@ -2,6 +2,12 @@
 
 namespace App\Services\Subscription;
 
+use App\Events\SubscriptionCancelled;
+use App\Events\SubscriptionExpired;
+use App\Events\SubscriptionPastDue;
+use App\Events\SubscriptionRenewed;
+use App\Events\SubscriptionResumed;
+use App\Events\SubscriptionSubscribed;
 use App\Exceptions\DomainException;
 use App\Models\Plan;
 use App\Models\Subscription;
@@ -62,13 +68,16 @@ class SubscriptionService
         "Subscribe to {$plan->code}"
       );
 
-      return $this->subscriptionRepo->create([
+      $subscription = $this->subscriptionRepo->create([
         'user_id' => $userId,
         'plan' => $plan->code,
         'status' => 'active',
         'current_period_start' => $now,
         'current_period_end' => $this->calculatePeriodEnd($now, $plan->interval),
       ]);
+
+      event(new SubscriptionSubscribed($subscription));
+      return $subscription;
     });
   }
 
@@ -95,6 +104,7 @@ class SubscriptionService
         $subscription->update([
           'status' => 'expired',
         ]);
+        event(new SubscriptionExpired($subscription));
       }
 
       return; // ⛔ KHÔNG tiếp tục renew
@@ -130,11 +140,13 @@ class SubscriptionService
           $this->getPlanInterval($subscription)
         ),
       ]);
+      event(new SubscriptionRenewed($subscription));
     } catch (DomainException $e) {
       // Payment failed → past_due
       $subscription->update([
         'status' => 'past_due',
       ]);
+      event(new SubscriptionPastDue($subscription));
     }
   }
   /**
@@ -153,6 +165,7 @@ class SubscriptionService
       'status' => 'cancelled',
       'cancelled_at' => now(),
     ]);
+    event(new SubscriptionCancelled($subscription));
   }
   /*
 🧠 Senior note
@@ -180,6 +193,7 @@ User vẫn dùng tới hết kỳ
       'status' => 'active',
       'cancelled_at' => null,
     ]);
+    event(new SubscriptionResumed($subscription));
   }
 
   protected function getPlanPrice(Subscription $subscription): float
