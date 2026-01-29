@@ -4,6 +4,8 @@ use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\PaymentWebhookController;
 use App\Http\Controllers\Api\SubscriptionController;
 use App\Http\Controllers\Api\VerifyEmailController;
+use App\Http\Controllers\Api\WebhookController;
+use App\Services\Payment\FakePaymentService;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/ping', function () {
@@ -36,4 +38,6 @@ Route::middleware('auth:sanctum')->group(function () {
   Route::post('/payments/subscription', [PaymentController::class, 'subscribe']);
 });
 
+// 3️⃣ WEBHOOK = NGUỒN SỰ THẬT
 Route::post('/webhooks/{gateway}', [PaymentWebhookController::class, 'handle']);
+Route::post('/webhooks/payment', [WebhookController::class, 'payment']);

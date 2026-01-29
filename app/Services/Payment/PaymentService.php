@@ -8,6 +8,7 @@ use App\Payments\PaymentGatewayFactory; // tại sao chỗ này không inject v�
 // nên gọi tĩnh để lấy instance cụ thể theo gateway
 use App\Repositories\Contracts\PaymentRepositoryInterface;
 use App\Services\Wallet\WalletService;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -78,13 +79,12 @@ class PaymentService
   /**
    * Handle webhook (idempotent)
    */
-  public function handleWebhook(string $gateway, array $payload): void
+  public function handleWebhook(string $gateway, Request $request): void
   {
     $gatewayInstance = PaymentGatewayFactory::make($gateway);
-    $parsed = $gatewayInstance->parseWebhook($payload);
+    $parsed = $gatewayInstance->parseWebhook($request);
 
-    $payment = $this->paymentRepo
-      ->findByGatewayPaymentId($gateway, $parsed->gatewayPaymentId);
+    $payment = $this->paymentRepo->findByGatewayPaymentId($gateway, $parsed->gatewayPaymentId);
 
     if (!$payment) {
       return; // unknown payment → ignore
@@ -134,6 +134,7 @@ class PaymentService
     ]);
   }
 
+  // PAYMENT INTENT
   public function createTopup(
     int $userId,
     float $amount,

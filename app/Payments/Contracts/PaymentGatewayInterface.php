@@ -4,6 +4,7 @@ namespace App\Payments\Contracts;
 
 use App\Models\Payment;
 use App\Payments\DTOs\ParsedWebhook;
+use Symfony\Component\HttpFoundation\Request;
 
 /**
 🧠 Senior note
@@ -24,7 +25,10 @@ interface PaymentGatewayInterface
   /**
    * Verify & parse webhook payload
    */
-  public function parseWebhook(array $payload): ParsedWebhook;
+  /**
+🔁 Lưu ý: chuyển từ array $payload → Request $request để gateway đọc header + body.
+   */
+  public function parseWebhook(Request $request): ParsedWebhook;
 
   /**
    * Gateway name (stripe, mock)

@@ -26,6 +26,7 @@ class PaymentRepository implements PaymentRepositoryInterface
 
   public function markSucceeded(Payment $payment, array $payload = []): void
   {
+    // 6️⃣ IDEMPOTENCY — STRIPE vs BẠN
     if ($payment->status === 'succeeded') {
       return; // idempotent
     }

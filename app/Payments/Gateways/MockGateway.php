@@ -5,6 +5,8 @@ namespace App\Payments\Gateways;
 use App\Models\Payment;
 use App\Payments\Contracts\PaymentGatewayInterface;
 use App\Payments\DTOs\ParsedWebhook;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 
 class MockGateway implements PaymentGatewayInterface
 {
@@ -31,18 +33,54 @@ class MockGateway implements PaymentGatewayInterface
   /**
    * Parse & verify webhook payload (mock)
    */
-  public function parseWebhook(array $payload): ParsedWebhook
+  public function parseWebhook(Request $request): ParsedWebhook
   {
+    $payload = $request->getContent();
+    // 4️⃣ SIGNATURE — STRIPE vs BẠN
+    $timestamp = $request->header('X-Timestamp');
+    $signature = $request->header('X-Signature');
+
+    if (!$timestamp || !$signature) {
+      throw new AccessDeniedHttpException('Missing signature headers');
+    }
+
+    // ⏱ Replay attack protection
+    $tolerance = config('services.mock.tolerance');
+    if (abs(time() - (int)$timestamp) > $tolerance) {
+      throw new AccessDeniedHttpException('Webhook timestamp expired');
+    }
+
+    // 4️⃣ SIGNATURE — STRIPE vs BẠN
+    // 🔐 Verify HMAC
+    $secret = config('services.mock.webhook_secret');
+    $expected = hash_hmac('sha256', $timestamp . '.' . $payload, $secret);
+
+    /**
+    🧠 Senior notes
+
+      hash_equals() chống timing attack
+
+      Tolerance chống replay
+
+      Gateway chỉ verify + parse
+     */
+    if (!hash_equals($expected, $signature)) {
+      throw new AccessDeniedHttpException('Invalid webhook signature');
+    }
+
+    $data = json_decode($payload, true);
+
+
     // payload mock ví dụ:
     // { gateway_payment_id, status }
-    if (!isset($payload['gateway_payment_id'], $payload['status'])) {
+    if (!isset($data['gateway_payment_id'], $data['status'])) {
       throw new \InvalidArgumentException('Invalid webhook payload');
     }
 
     return new ParsedWebhook(
-      $payload['gateway_payment_id'],
-      $payload['status'], // succeeded | failed
-      $payload
+      $data['gateway_payment_id'],
+      $data['status'],
+      $data
     );
   }
 }
