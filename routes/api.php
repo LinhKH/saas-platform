@@ -30,6 +30,10 @@ Route::middleware('auth:sanctum')->group(function () {
   Route::post('/subscription/resume', [SubscriptionController::class, 'resume']);
 
   Route::post('/payments', [PaymentController::class, 'create']);
+  // 🔹 Wallet topup
+  Route::post('/payments/topup', [PaymentController::class, 'topup']);
+  // 🔹 Subscription first charge
+  Route::post('/payments/subscription', [PaymentController::class, 'subscribe']);
 });
 
 Route::post('/webhooks/{gateway}', [PaymentWebhookController::class, 'handle']);

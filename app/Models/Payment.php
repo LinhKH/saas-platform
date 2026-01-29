@@ -13,6 +13,9 @@ class Payment extends Model
     'amount',
     'status',
     'payload',
+    'user_id',
+    'purpose',
+    'target_id',
   ];
 
   protected $casts = [

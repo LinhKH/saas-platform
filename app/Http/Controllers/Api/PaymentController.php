@@ -39,4 +39,48 @@ class PaymentController extends BaseApiController
 
     return $this->success($result, 'Payment created');
   }
+
+  /**
+   * Create TOPUP payment
+   */
+  public function topup(Request $request)
+  {
+    $data = $request->validate([
+      'amount' => 'required|numeric|min:1',
+      'reference' => 'required|string',
+      'gateway' => 'sometimes|string',
+    ]);
+
+    $result = $this->paymentService->createTopup(
+      $request->user()->id,
+      $data['amount'],
+      $data['reference'],
+      $data['gateway'] ?? 'mock'
+    );
+
+    return $this->success($result, 'Topup payment created');
+  }
+
+  /**
+   * Create SUBSCRIPTION payment
+   */
+  public function subscribe(Request $request)
+  {
+    $data = $request->validate([
+      'subscription_id' => 'required|integer',
+      'amount' => 'required|numeric|min:1',
+      'reference' => 'required|string',
+      'gateway' => 'sometimes|string',
+    ]);
+
+    $result = $this->paymentService->createSubscriptionPayment(
+      $request->user()->id,
+      $data['subscription_id'],
+      $data['amount'],
+      $data['reference'],
+      $data['gateway'] ?? 'mock'
+    );
+
+    return $this->success($result, 'Subscription payment created');
+  }
 }

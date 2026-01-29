@@ -3,6 +3,7 @@
 namespace App\Payments\Contracts;
 
 use App\Models\Payment;
+use App\Payments\DTOs\ParsedWebhook;
 
 /**
 🧠 Senior note
@@ -23,7 +24,7 @@ interface PaymentGatewayInterface
   /**
    * Verify & parse webhook payload
    */
-  public function parseWebhook(array $payload): array;
+  public function parseWebhook(array $payload): ParsedWebhook;
 
   /**
    * Gateway name (stripe, mock)
