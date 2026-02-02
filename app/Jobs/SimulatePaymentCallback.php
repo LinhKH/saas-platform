@@ -12,6 +12,7 @@ class SimulatePaymentCallback implements ShouldQueue
     public Payment $payment
   ) {}
 
+  // 👉 Đây là giả lập cổng thanh toán gọi webhook về server bạn
   public function handle(): void
   {
     Http::post(url('/api/webhooks/payment'), [

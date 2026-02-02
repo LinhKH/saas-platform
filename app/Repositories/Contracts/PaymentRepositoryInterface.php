@@ -12,7 +12,10 @@ interface PaymentRepositoryInterface
 
   public function findByGatewayPaymentId(string $gateway, string $gatewayPaymentId): ?Payment;
 
-  public function markSucceeded(Payment $payment, array $payload = []): void;
+  public function saveAccess(string $orderId, string $accessId, string $accessPass): void;
 
-  public function markFailed(Payment $payment, array $payload = []): void;
+  public function findByOrderId(string $orderId);
+  public function markSucceeded(string $orderId, array $raw): void;
+  public function markFailed(string $orderId, array $raw): void;
+  public function getPendingGmoPayments(int $limit = 50);
 }

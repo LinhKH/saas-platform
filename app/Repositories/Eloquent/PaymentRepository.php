@@ -24,22 +24,26 @@ class PaymentRepository implements PaymentRepositoryInterface
       ->first();
   }
 
-  public function markSucceeded(Payment $payment, array $payload = []): void
+  // 👉 Đây là idempotency point
+  public function markSucceeded(string $orderId, array $raw): void
   {
-    // 6️⃣ IDEMPOTENCY — STRIPE vs BẠN
-    if ($payment->status === 'succeeded') {
-      return; // idempotent
+    $payment = $this->findByOrderId($orderId);
+
+    if (!$payment || $payment->status === 'succeeded') {
+      return;
     }
 
     $payment->update([
       'status' => 'succeeded',
-      'payload' => $payload,
+      'raw_result' => $raw,
     ]);
   }
 
-  public function markFailed(Payment $payment, array $payload = []): void
+  public function markFailed(string $orderId, array $payload = []): void
   {
-    if ($payment->status === 'failed') {
+    $payment = $this->findByOrderId($orderId);
+
+    if (!$payment || $payment->status === 'failed') {
       return; // idempotent
     }
 
@@ -47,5 +51,26 @@ class PaymentRepository implements PaymentRepositoryInterface
       'status' => 'failed',
       'payload' => $payload,
     ]);
+  }
+
+  public function findByOrderId(string $orderId): ?Payment
+  {
+    return Payment::where('order_id', $orderId)->first();
+  }
+
+  public function saveAccess(string $orderId, string $accessId, string $accessPass): void
+  {
+    Payment::where('order_id', $orderId)->update([
+      'access_id' => $accessId,
+      'access_pass' => $accessPass,
+    ]);
+  }
+
+  public function getPendingGmoPayments(int $limit = 50)
+  {
+    return Payment::where('gateway', 'gmo')
+      ->where('status', 'pending')
+      ->limit($limit)
+      ->get();
   }
 }

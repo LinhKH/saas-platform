@@ -32,7 +32,8 @@ class PaymentService
 {
   public function __construct(
     private PaymentRepositoryInterface $paymentRepo,
-    private WalletService $walletService
+    private WalletService $walletService,
+    private \App\Payments\Contracts\GmoGatewayInterface $gmoGateway,
   ) {}
 
   /**
@@ -206,5 +207,64 @@ class PaymentService
         'pay_url' => $intent['pay_url'],
       ];
     });
+  }
+
+
+  /**
+🧠 RẤT QUAN TRỌNG
+
+EntryTran có thể retry
+
+Phải idempotent
+
+Không gọi lại nếu đã có AccessID
+   */
+  public function entryTransaction(string $orderId): void
+  {
+    $payment = $this->paymentRepo->findByOrderId($orderId);
+
+    if (!$payment) {
+      throw new \DomainException('Payment not found');
+    }
+
+    // idempotent: đã có access thì không entry lại
+    if ($payment->access_id) {
+      return;
+    }
+    /**
+🧠 RẤT QUAN TRỌNG
+
+EntryTran có thể retry
+
+Phải idempotent
+
+Không gọi lại nếu đã có AccessID
+     */
+    $result = $this->gmoGateway->entryTran(
+      $payment->order_id,
+      (int) $payment->amount
+    );
+
+    $this->paymentRepo->saveAccess(
+      $payment->order_id,
+      $result['AccessID'],
+      $result['AccessPass']
+    );
+  }
+
+  public function execTransaction(string $orderId): string
+  {
+    $payment = $this->paymentRepo->findByOrderId($orderId);
+
+    if (!$payment || !$payment->access_id) {
+      throw new \DomainException('Payment not ready');
+    }
+
+    $result = $this->gmoGateway->execTran(
+      $payment->access_id,
+      $payment->access_pass
+    );
+
+    return $result['payment_url'];
   }
 }

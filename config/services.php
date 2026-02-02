@@ -38,5 +38,12 @@ return [
     'webhook_secret' => env('MOCK_WEBHOOK_SECRET'),
     'tolerance' => 300, // 5 minutes
   ],
+  'gmo' => [
+    'shop_id'   => env('GMO_SHOP_ID'),
+    'shop_pass' => env('GMO_SHOP_PASS'),
+    'entry_url' => env('GMO_ENTRY_URL'),
+    'exec_url'  => env('GMO_EXEC_URL'),
+    'search_url' => env('GMO_SEARCH_URL'),
+  ],
 
 ];

@@ -12,3 +12,6 @@ Artisan::command('inspire', function () {
 
 Schedule::job(new RenewSubscriptionsJob)
     ->everyMinute();
+
+Schedule::command('gmo:reconcile')
+    ->everyFiveMinutes();

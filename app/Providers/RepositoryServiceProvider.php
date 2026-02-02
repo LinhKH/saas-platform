@@ -2,6 +2,9 @@
 
 namespace App\Providers;
 
+use App\Payments\Contracts\GmoGatewayInterface;
+use App\Payments\Gateways\MockGmoGateway;
+use App\Payments\Gateways\RealGmoGateway;
 use App\Repositories\Contracts\PaymentRepositoryInterface;
 use App\Repositories\Contracts\SubscriptionRepositoryInterface;
 use App\Repositories\Contracts\UserRepositoryInterface;
@@ -24,10 +27,12 @@ class RepositoryServiceProvider extends ServiceProvider
       WalletRepositoryInterface::class => WalletRepository::class,
       SubscriptionRepositoryInterface::class => SubscriptionRepository::class,
       PaymentRepositoryInterface::class => PaymentRepository::class,
+      GmoGatewayInterface::class => MockGmoGateway::class,
+      // GmoGatewayInterface::class => RealGmoGateway::class, // 👉 Chuyển sang dùng gateway thật khi deploy production
     ];
 
     foreach ($bindings as $abstract => $concrete) {
-      $this->app->bind($abstract, $concrete);
+      $this->app->bind($abstract, $concrete); // interface to implementation
     }
   }
 
