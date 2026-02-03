@@ -41,3 +41,15 @@ Route::middleware('auth:sanctum')->group(function () {
 // 3️⃣ WEBHOOK = NGUỒN SỰ THẬT
 Route::post('/webhooks/{gateway}', [PaymentWebhookController::class, 'handle']);
 Route::post('/webhooks/payment', [WebhookController::class, 'payment']);
+
+use App\Http\Controllers\Api\GmoPaymentController;
+use App\Http\Controllers\Api\GmoWebhookController;
+
+Route::prefix('gmo')->group(function () {
+
+  // 1️⃣ Tạo payment + redirect url
+  Route::post('/payments', [GmoPaymentController::class, 'create']);
+
+  // 2️⃣ GMO Result API (callback)
+  Route::post('/webhook', [GmoWebhookController::class, 'handle']);
+});

@@ -14,8 +14,13 @@ return Application::configure(basePath: dirname(__DIR__))
     health: '/up',
   )
   ->withMiddleware(function (Middleware $middleware): void {
-    // Sanctum API token-based, không session, không Blade.  
+    // Sanctum API token-based, không session, không Blade.
     $middleware->statefulApi();
+
+    // Disable CSRF cho GMO routes (để test)
+    $middleware->validateCsrfTokens(except: [
+      'api/gmo/*',
+    ]);
   })
   ->withExceptions(function (Exceptions $exceptions): void {
     /**
