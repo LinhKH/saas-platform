@@ -7,6 +7,14 @@ use App\Repositories\Contracts\SubscriptionRepositoryInterface;
 
 class SubscriptionRepository implements SubscriptionRepositoryInterface
 {
+  public function findActiveByUserAndPlan(int $userId, int $planId): ?Subscription
+  {
+    return Subscription::where('user_id', $userId)
+      ->where('plan_id', $planId)
+      ->where('status', 'active')
+      ->latest()
+      ->first();
+  }
   public function getActiveByUser(int $userId): ?Subscription
   {
     return Subscription::where('user_id', $userId)
@@ -15,8 +23,18 @@ class SubscriptionRepository implements SubscriptionRepositoryInterface
       ->first();
   }
 
+  public function findById(int $id): ?Subscription
+  {
+    return Subscription::find($id);
+  }
+
   public function create(array $data): Subscription
   {
     return Subscription::create($data);
+  }
+
+  public function save(Subscription $subscription): void
+  {
+    $subscription->save();
   }
 }

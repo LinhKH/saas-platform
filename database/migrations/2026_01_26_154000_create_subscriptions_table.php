@@ -22,8 +22,7 @@ return new class extends Migration
     Schema::create('subscriptions', function (Blueprint $table) {
       $table->id();
       $table->foreignId('user_id')->constrained()->cascadeOnDelete();
-
-      $table->string('plan'); // basic, pro, enterprise
+      $table->foreignId('plan_id')->constrained()->restrictOnDelete();
       $table->enum('status', [
         'trialing',
         'active',

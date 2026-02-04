@@ -13,10 +13,11 @@ class ApplyPaymentSuccess
     private SubscriptionService $subscriptions
   ) {}
 
+  //👉 Side-effect nằm ở Listener, không nằm ở Service.
   public function handle(PaymentSucceeded $event): void
   {
     $payment = $event->payment;
-
+    // Dựa vào purpose để quyết định business logic
     match ($payment->purpose) {
       'topup' => $this->wallets->credit(
         $payment->user_id,
@@ -25,9 +26,7 @@ class ApplyPaymentSuccess
         $payment->order_id
       ),
 
-      'subscription' => $this->subscriptions->activateFromPayment(
-        $payment
-      ),
+      'subscription' => $this->subscriptions->activateFromPayment($payment),
 
       default => null
     };

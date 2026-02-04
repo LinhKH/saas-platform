@@ -8,18 +8,18 @@ class Payment extends Model
 {
   protected $fillable = [
     'gateway',
-    'gateway_payment_id',
-    'reference',
+    'order_id',
+    'access_id',
+    'access_pass',
+    'user_id',
     'amount',
     'status',
-    'payload',
-    'user_id',
     'purpose',
-    'target_id',
+    'subscription_id',
+    'raw_result',
   ];
 
   protected $casts = [
-    'amount' => 'decimal:2',
-    'payload' => 'array',
+    'raw_result' => 'array',
   ];
 }

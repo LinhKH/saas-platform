@@ -55,7 +55,7 @@ class GmoPaymentService
       $payment = $this->payments->findByOrderId($result->orderId);
 
       if (!$payment || $payment->status === 'succeeded') {
-        return;
+        return; // idempotent
       }
 
       if ($result->success) {
@@ -65,7 +65,7 @@ class GmoPaymentService
         );
 
         $shouldFireEvent = true;
-        // 👉 trigger wallet / subscription sau
+        // 👉 trigger wallet / subscription sau → đã làm (bắn event sau transaction)
       } else {
         $this->payments->markFailed(
           $result->orderId,
@@ -74,6 +74,17 @@ class GmoPaymentService
       }
     });
     // 🔥 PHÁT EVENT SAU COMMIT
+    /**❗ TẠI SAO PHÁT EVENT SAU TRANSACTION?
+
+    DB commit xong → event chạy
+
+    Tránh:
+
+    Cộng tiền nhưng DB rollback
+
+    Mail gửi nhưng payment chưa tồn tại
+
+    👉 Đây là lỗi production rất hay gặp nếu làm sai */
     if ($shouldFireEvent && $payment) {
       event(new PaymentSucceeded($payment));
     }

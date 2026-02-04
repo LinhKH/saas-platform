@@ -15,12 +15,12 @@ class SubscriptionController extends BaseApiController
   public function subscribe(Request $request)
   {
     $data = $request->validate([
-      'plan' => 'required|string',
+      'plan_code' => 'required|string|exists:plans,code',
     ]);
 
     $subscription = $this->subscriptionService->subscribe(
       $request->user()->id,
-      $data['plan'],
+      $data['plan_code'],
       'subscription_' . uniqid()
     );
 

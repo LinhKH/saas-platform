@@ -9,6 +9,7 @@ use App\Events\SubscriptionRenewed;
 use App\Events\SubscriptionResumed;
 use App\Events\SubscriptionSubscribed;
 use App\Exceptions\DomainException;
+use App\Models\Payment;
 use App\Models\Plan;
 use App\Models\Subscription;
 use App\Repositories\Contracts\SubscriptionRepositoryInterface;
@@ -50,7 +51,7 @@ class SubscriptionService
       if ($plan->trial_days > 0) {
         return $this->subscriptionRepo->create([
           'user_id' => $userId,
-          'plan' => $plan->code,
+          'plan_id' => $plan->id,
           'status' => 'trialing',
           // tại sao dùng copy()?
           // Trong Carbon, phương thức copy() được sử dụng để tạo một bản sao của đối tượng Carbon hiện tại.
@@ -70,7 +71,7 @@ class SubscriptionService
 
       $subscription = $this->subscriptionRepo->create([
         'user_id' => $userId,
-        'plan' => $plan->code,
+        'plan_id' => $plan->id,
         'status' => 'active',
         'current_period_start' => $now,
         'current_period_end' => $this->calculatePeriodEnd($now, $plan->interval),
@@ -135,10 +136,7 @@ class SubscriptionService
       // Success → extend period
       $subscription->update([
         'current_period_start' => now(),
-        'current_period_end' => $this->calculatePeriodEnd(
-          now(),
-          $this->getPlanInterval($subscription)
-        ),
+        'current_period_end' => $this->calculatePeriodEnd(now(), $this->getPlanInterval($subscription)),
       ]);
       event(new SubscriptionRenewed($subscription));
     } catch (DomainException $e) {
@@ -198,15 +196,61 @@ User vẫn dùng tới hết kỳ
 
   protected function getPlanPrice(Subscription $subscription): float
   {
-    return match ($subscription->plan) {
-      'pro' => 300,
-      'pro_yearly' => 3000,
-      default => 100,
-    };
+    return $subscription->plan->price;
   }
 
   protected function getPlanInterval(Subscription $subscription): string
   {
-    return 'month';
+    return $subscription->plan->interval;
+  }
+
+  /**
+   * Activate or renew subscription from successful payment
+   */
+  public function activateFromPayment(Payment $payment): void
+  {
+    // 1️⃣ Validate payment
+    if ($payment->status !== 'succeeded') {
+      throw new DomainException('Payment is not successful');
+    }
+
+    if ($payment->purpose !== 'subscription') {
+      throw new DomainException('Payment is not for subscription');
+    }
+
+    if (!$payment->subscription_id) {
+      throw new DomainException('Payment missing subscription_id');
+    }
+
+    // 2️⃣ Load subscription
+    $subscription = $this->subscriptionRepo->findById($payment->subscription_id);
+
+    if (!$subscription) {
+      throw new DomainException('Subscription not found');
+    }
+
+    // 3️⃣ Verify payment belongs to subscription owner
+    if ($subscription->user_id !== $payment->user_id) {
+      throw new DomainException('Payment user mismatch with subscription owner');
+    }
+
+    $now = Carbon::now();
+    $plan = $subscription->plan;
+
+    // 4️⃣ Calculate new period end based on plan interval
+    $periodEnd = $this->calculatePeriodEnd($now, $plan->interval);
+
+    // 5️⃣ ACTIVATE or RENEW subscription
+    if ($subscription->status === 'active' && $subscription->current_period_end->greaterThan($now)) {
+      // Nếu còn hạn → cộng dồn thêm 1 kỳ
+      $subscription->current_period_end = $this->calculatePeriodEnd($subscription->current_period_end, $plan->interval);
+    } else {
+      // Nếu chưa active hoặc đã hết hạn → reset period
+      $subscription->status = 'active';
+      $subscription->current_period_start = $now;
+      $subscription->current_period_end = $periodEnd;
+    }
+
+    $this->subscriptionRepo->save($subscription);
   }
 }

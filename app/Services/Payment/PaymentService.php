@@ -123,7 +123,7 @@ class PaymentService
     // payment thành công → kích hoạt subscription
     // reference idempotent nên an toàn retry
 
-    $subscription = \App\Models\Subscription::find($payment->target_id);
+    $subscription = \App\Models\Subscription::find($payment->subscription_id);
     if (!$subscription) {
       return;
     }
@@ -167,7 +167,7 @@ class PaymentService
       [
         'user_id' => $userId,
         'purpose' => 'subscription',
-        'target_id' => $subscriptionId,
+        'subscription_id' => $subscriptionId,
       ]
     );
   }
